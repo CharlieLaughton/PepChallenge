@@ -245,7 +245,7 @@ function setCredit (credit) {
 };
 
 const nPeptides = document.getElementById('npeptides');
-nPeptides.addEventListener('click', (e) => {
+nPeptides.addEventListener('change', (e) => {
     const nPeps = e.target.value;
     clearInputSequences();
     iBest = findBest();

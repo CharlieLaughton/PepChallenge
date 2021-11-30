@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css"/>
+    <script src="script.js" defer></script>
+    <title>Document</title>
+</head>
+<body>
+    <div class="header">Peptide design challenge</div>
+    <div class="body">
+	    <div class="sidebar">Instructions
+            <div class="sidetop"> We require a tetrapeptide optimized to inhibit our protease target. IC50 data for 10 initial peptides is available. We have allocated your company a budget of 20 credits to have further peptides synthesized and tested, your target is to identify a molecule with an IC50 around 2 nM. You may request up to 4 peptides to be made and tested each round; the cost is 1 credit per peptide + 1 for the request. The company identifying the most potent peptide will receive the contract for further drug development.
+            </div>
+            <div class="page-footer" id="credits"> Remaining credit: 20</div>
+        </div>
+	    <div class="main">
+		    <div class="page-header">Peptide analysis data</div>
+		    <div class="content">
+			    <div class="box">
+                    <table>
+                        <thead>
+                            <tr><th>sequence</th><th>IC50 (nm)</th></tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+			    </div>
+            </div>
+            <div class="page-footer" id="best"></div>
+		</div>
+        <div class="sidebar">Synthesis and analysis order form
+            <div class="sidetop">
+                <div class="requestsize">
+                    <label for="npeptides">Number of peptides requested:</label>
+                    <select id="npeptides" name="npeptides" size="1">
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                    </select>
+                </div>
+                <div class="sequencearea">
+                    <div class="sequenceinputs">
+                        <div class="sequenceinputhead">
+                            sequences:
+                        </div>
+                        <div class="sequenceinputvalues" id="seqvals">
+                            
+                        </div>
+                    </div>
+                    <div class="sequencecost">
+                    </div>
+                </div>
+                <button id="makebutton">
+                    Synthesise and test
+                </button>
+            </div>
+            <div class="page-footer" id="submit"> <button id="submitbutton">Submit best peptide</button></div>
+        </div>
+	</div> 
+</body>
+</html>

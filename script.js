@@ -1,6 +1,4 @@
-const nInitialSeqs = 10;
-let seqIDs = [];
-let seqICs = [];
+
 
 function zScale (aa) {
     const aas = "FWILVMYPACTSQGHKREND";
@@ -40,13 +38,35 @@ function zScore (seq1, seq2) {
     return Math.sqrt(score);
 };
 
-function maxZScore (seq1, nTrys=100) {
-    let score = 0;
-    for (let i=0; i<nTrys; i++) {
-        seq2 = randomPeptide(4);
-        score = Math.max(score, zScore(seq1, seq2));
+
+function generateAllZScores (seq1) {
+    const aas = "ACDEFGHIKLMNPQRSTVWY";
+    const scoreData = [];
+    let seq2a = '';
+    let seq2b = '';
+    let seq2c = '';
+    let seq2 = '';
+    let score = 0
+    for (let i = 0; i<aas.length; i++) {
+        seq2a = aas.substr(i, 1);
+        for (let j = 0; j<aas.length; j++) {
+            seq2b = seq2a + aas.substr(j, 1);
+            for (let k = 0; k<aas.length; k++) {
+                seq2c = seq2b + aas.substr(k, 1);
+                for (let l = 0; l<aas.length; l++) {
+                    seq2 = seq2c + aas.substr(l, 1);
+                    score = zScore(seq1, seq2);
+                    scoreData.push([seq2, score])
+                };
+            };
+        };
     };
-    return score;
+    scoreData.sort(function(a, b){return a[1] - b[1]});
+    for (let i=0; i<scoreData.length; i++) {
+        allPeptides[i] = scoreData[i][0];
+        allScores[i] = scoreData[i][1];
+    }
+    maxScore = allScores[allScores.length - 1];
 };
 
 function IC50 (score) {
@@ -64,23 +84,52 @@ function randomPeptide (nAA) {
     for (let i=0; i<nAA; i++) {
         pepSeq.push(randomAA());
     }
-    return pepSeq;
+    return pepSeq.join('');
+};
+
+function generateRelatedPeptides (seq, nSeqs) {
+    seqs = [];
+    const i = allPeptides.indexOf(seq);
+    do {
+        const k = Math.floor(Math.random() * seq.length);
+        let pre = (k > 0) ? seq.slice(0, k) : '';
+        let post = (k < 3) ? seq.slice(k+1) : '';
+        let aa = seq[k];
+        let bb = aa;
+        while (bb === aa) {
+            bb = randomAA();
+        };
+        seq2 = pre + bb + post;
+        const j = allPeptides.indexOf(seq2);
+        if (j > i) {
+            if (seqs.indexOf(seq2) === -1) {
+                seqs.push(seq2);
+            };
+        };
+    } while (seqs.length < nSeqs);
+    return seqs;
 };
 
 function initializeTableData (nInitialSeqs) {
     seqIDs = [];
     seqICs = [];
-    for (let i = 0; i < nInitialSeqs; i++) {
-        const randomSeq = randomPeptide(4);
+    const iMid = allPeptides.length / 4;
+    seqIDs[0] = allPeptides[iMid];
+    seqICs[0] = IC50(allScores[iMid]).toFixed(0);
+    const rPeps = generateRelatedPeptides(seqIDs[0], nInitialSeqs - 1);
+    for (let i = 1; i < nInitialSeqs; i++) {
+        const randomSeq = rPeps[i - 1];
         seqIDs[seqIDs.length] = randomSeq;
-        seqICs[seqICs.length] = IC50(zScore(targetSeq, randomSeq)).toFixed(0);
+        const score = allScores[allPeptides.indexOf(randomSeq)];
+        seqICs[seqICs.length] = IC50(score).toFixed(0);
     };
 };
 
 function appendTableData (pepSeqs) {
     for (let i = 0; i < pepSeqs.length; i++) {
         seqIDs[seqIDs.length] = pepSeqs[i];
-        seqICs[seqICs.length] = IC50(zScore(targetSeq, pepSeqs[i])).toFixed(0);
+        const score = allScores[allPeptides.indexOf(pepSeqs[i])];
+        seqICs[seqICs.length] = IC50(score).toFixed(0);
     };
 };
 
@@ -97,7 +146,7 @@ function fillTable () {
     for (let i = 0; i < seqIDs.length; i++) {
         let row = document.createElement('tr');
         let cell = document.createElement('td');
-        cell.textContent = seqIDs[i].join("");
+        cell.textContent = seqIDs[i];
         row.appendChild(cell);
         cell = document.createElement('td');
         cell.textContent = seqICs[i];
@@ -124,7 +173,7 @@ function findBest () {
 function reportBest () {
     const iBest = findBest();
     const best = document.querySelector("[id=best]");
-    best.textContent = `best peptide so far: ${seqIDs[iBest].join("")} IC50 = ${seqICs[iBest]} nM`;
+    best.textContent = `best peptide so far: ${seqIDs[iBest]} IC50 = ${seqICs[iBest]} nM`;
 };
 
 function clearInputSequences () {
@@ -218,7 +267,7 @@ function readInputSequences () {
         aas.forEach((aa) => {
             seq[seq.length] = aa.value;
         });
-        seqs[seqs.length] = seq;
+        seqs[seqs.length] = seq.join('');
     });
     return seqs;
 };
@@ -235,13 +284,18 @@ function disableSubmitButton () {
 
 function enableMakeButton () {
     const synthButton = document.getElementById('makebutton');
-    console.log('enabling...');
     synthButton.removeAttribute('disabled');
 };
 
 function setCredit (credit) {
-    const element = document.getElementById('credits');
+    const element = document.querySelector('.credits');
     element.textContent = `Remaining credit: ${credit}`;
+};
+
+function setScore (index, baseIndex) {
+    const element = document.querySelector('.score');
+    const score = (1 - index/baseIndex) * 100;
+    element.textContent = `Score: ${score}`;
 };
 
 const nPeptides = document.getElementById('npeptides');
@@ -256,9 +310,11 @@ function play () {
     credit = 20;
     setCredit(credit);
     targetSeq = randomPeptide(4);
-    maxScore = maxZScore(targetSeq);
+    generateAllZScores(targetSeq);
     initializeTableData(10);
     let iBest = findBest();
+    baseIndex = allPeptides.indexOf(seqIDs[iBest]);
+    setScore(baseIndex, baseIndex);
     resetInputSequences(Math.min(4, credit), seqIDs[iBest]);
     updateTable();
     reportBest();
@@ -271,8 +327,10 @@ synthButton.addEventListener('click', (e) => {
     updateTable();
     reportBest();
     iBest = findBest();
+    const index = allPeptides.indexOf(seqIDs[iBest]);
     credit -= (seqs.length + 1);
     setCredit(credit);
+    setScore(index, baseIndex);
     resetInputSequences(Math.min(4, credit - 1), seqIDs[iBest]);
     if (credit < 2) {
         disableMakeButton();
@@ -282,9 +340,8 @@ synthButton.addEventListener('click', (e) => {
 const submitButton = document.getElementById('submit');
 submitButton.addEventListener('click', () => {
     const iBest = findBest();
-    const bestSeq = seqIDs[iBest].join("");
-    if (confirm(`Your best peptide is ${bestSeq} \n the ideal peptide would have been ${targetSeq.join("")}\n Click OK to play again`)) {
-        console.log('playing again');
+    const bestSeq = seqIDs[iBest];
+    if (confirm(`Your best peptide is ${bestSeq} \n the ideal peptide would have been ${targetSeq}\n Click OK to play again`)) {
         enableMakeButton();
         play();
     } else {
@@ -294,9 +351,13 @@ submitButton.addEventListener('click', () => {
     };
 });
 
+const nInitialSeqs = 10;
+let seqIDs = [];
+let seqICs = [];
+let allPeptides = [];
+let allScores = [];
 let targetSeq = 'AAAA';
 let credit = 20;
 let maxScore = 0;
-
-
+let baseIndex = 0;
 play();

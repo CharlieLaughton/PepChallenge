@@ -1,4 +1,29 @@
 
+const encrypt = (text) => {
+    const aas = "FWILVMYPACTSQGHKREND";
+    let code = 0;
+    for (let i = 0; i<text.length; i++) {
+        let j = aas.indexOf(text.substr(i, 1));
+        if (j === -1) {
+            return -1
+        }
+        code = code * 20;
+        code = code + j;
+    }
+    return code
+};
+
+const decrypt = (data) => {
+    const aas = "FWILVMYPACTSQGHKREND";
+    let text = ""
+    while (data > 0) {
+        j = data % 20
+        text = (aas.substr(j, 1)) + text;
+        data = data - j;
+        data = data / 20;
+    };
+    return text;
+};
 
 function zScale (aa) {
     const aas = "FWILVMYPACTSQGHKREND";
@@ -86,6 +111,28 @@ function randomPeptide (nAA) {
     }
     return pepSeq.join('');
 };
+
+function readPeptide () {
+    let pepSeq = prompt("Sequence:");
+    let pepCode = encrypt(pepSeq);
+    while (pepCode === -1) {
+        pepSeq = prompt("Invalid sequence, try again:");
+        pepCode = encrypt(pepSeq);
+    }
+    console.log(pepSeq, pepCode, decrypt(pepCode));
+    return pepSeq;
+}
+
+function readGameCode() {
+    let pepCode = prompt("Game Code:");
+    let pepSeq = decrypt(pepCode);
+    while (pepSeq.length != 4) {
+        pepCode = prompt("Invalid game code, try again:");
+        pepSeq = decrypt(pepCode);
+    }
+    console.log(pepSeq, pepCode);
+    return pepSeq;
+}
 
 function generateRelatedPeptides (seq, nSeqs) {
     seqs = [];
@@ -309,7 +356,9 @@ nPeptides.addEventListener('change', (e) => {
 function play () {
     credit = 20;
     setCredit(credit);
-    targetSeq = randomPeptide(4);
+    //targetSeq = randomPeptide(4);
+    //targetSeq = readPeptide();
+    targetSeq = readGameCode();
     generateAllZScores(targetSeq);
     initializeTableData(10);
     let iBest = findBest();
